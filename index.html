@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang web xem gì cũng được</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff0055;
+            --secondary: #00d4ff;
+            --dark: #0a0a0a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 50%, #0a0a1a 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Progress Bar - ÉP % */
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.1);
+            z-index: 9999;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .toast {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px 25px;
+            border-left: 5px solid;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left-color: #00ff88;
+            background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,0,0,0.8));
+        }
+
+        .toast.error {
+            border-left-color: #ff4444;
+            background: linear-gradient(135deg, rgba(255,68,68,0.1), rgba(0,0,0,0.8));
+        }
+
+        .toast.warning {
+            border-left-color: #ffaa00;
+            background: linear-gradient(135deg, rgba(255,170,0,0.1), rgba(0,0,0,0.8));
+        }
+
+        .toast-icon {
+            font-size: 1.8em;
+        }
+
+        .toast.success .toast-icon { color: #00ff88; }
+        .toast.error .toast-icon { color: #ff4444; }
+        .toast.warning .toast-icon { color: #ffaa00; }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .toast-message {
+            color: #aaa;
+            font-size: 0.95em;
+        }
+
+        /* Ban Modal */
+        .ban-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 100000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ban-modal.active {
+            display: flex;
+        }
+
+        .ban-content {
+            background: linear-gradient(135deg, #1a0a0a 0%, #0a0a0a 100%);
+            border: 3px solid #ff0000;
+            border-radius: 25px;
+            padding: 50px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(255,0,0,0.5);
+        }
+
+        .ban-icon {
+            font-size: 5em;
+            color: #ff0000;
+            margin-bottom: 20px;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .ban-title {
+            color: #ff0000;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .ban-timer {
+            font-size: 3em;
+            color: #ff4444;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(255,0,0,0.5);
+        }
+
+        /* Crop Modal */
+        .crop-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .crop-modal.active {
+            display: flex;
+        }
+
+        .crop-content {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            text-align: center;
+        }
+
+        .crop-area {
+            max-width: 400px;
+            max-height: 400px;
+            margin: 20px auto;
+            border: 2px dashed var(--primary);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .crop-area img {
+            max-width: 100%;
+            display: block;
+        }
+
+        .crop-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        /* Permission Modal */
+        .permission-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 5000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .permission-modal.active {
+            display: flex;
+        }
+
+        .permission-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid var(--primary);
+        }
+
+        .permission-icon {
+            font-size: 3em;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: var(--glass);
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: left;
+        }
+
+        .permission-item i {
+            font-size: 1.5em;
+            color: var(--secondary);
+        }
+
+        .permission-item.granted {
+            border: 1px solid #00ff88;
+        }
+
+        .permission-item.denied {
+            border: 1px solid #ff4444;
+            opacity: 0.6;
+        }
+
+        /* Network Status - CHỈ PING */
+        .network-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid transparent;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        .spinner.active {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, rgba(255,0,85,0.1) 0%, transparent 100%);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            background: linear-gradient(45deg, #ff0055, #00d4ff, #ff0055);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 3s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .subtitle {
+            color: #888;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+
+        /* Clock */
+        .clock-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+
+        .analog-clock {
+            width: 200px;
+            height: 200px;
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            position: relative;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(255,0,85,0.3);
+        }
+
+        .clock-face {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 4px;
+        }
+
+        .hour-hand {
+            width: 6px;
+            height: 50px;
+            background: #fff;
+            margin-left: -3px;
+        }
+
+        .minute-hand {
+            width: 4px;
+            height: 70px;
+            background: var(--secondary);
+            margin-left: -2px;
+        }
+
+        .second-hand {
+            width: 2px;
+            height: 80px;
+            background: var(--primary);
+            margin-left: -1px;
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--primary);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .clock-number {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .digital-clock {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 20px 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .digital-time {
+            font-size: 2.5em;
+            font-family: 'Courier New', monospace;
+            color: var(--secondary);
+            text-shadow: 0 0 10px var(--secondary);
+        }
+
+        .date-display {
+            margin-top: 10px;
+            color: #888;
+        }
+
+        /* Greeting */
+        .greeting {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.3em;
+            color: var(--secondary);
+        }
+
+        /* Auth Section */
+        .auth-section {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 15px;
+            background: transparent;
+            border: 2px solid var(--border);
+            color: #fff;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .auth-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(255,0,85,0.4);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(255,0,85,0.3);
+        }
+
+        .username-display {
+            background: var(--glass);
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--secondary);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .username-display label {
+            color: #888;
+            font-size: 0.9em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .username-value {
+            font-size: 1.3em;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(45deg, var(--primary), #ff3377);
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,0,85,0.4);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, var(--secondary), #00aaff);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 10px 30px rgba(0,212,255,0.4);
+        }
+
+        .btn-large {
+            padding: 20px 40px;
+            font-size: 1.2em;
+        }
+
+        /* Main Menu */
+        .main-menu {
+            display: none;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .main-menu.active {
+            display: block;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .menu-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 15px 40px rgba(255,0,85,0.2);
+        }
+
+        .menu-card i {
+            font-size: 2.5em;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .menu-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .menu-card p {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        /* Search Section */
+        .search-section {
+            display: none;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .search-section.active {
+            display: block;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 18px 25px;
+            border: 2px solid var(--border);
+            border-radius: 30px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 25px rgba(255,0,85,0.3);
+        }
+
+        .search-options {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .option-btn {
+            padding: 12px 25px;
+            border: 2px solid var(--border);
+            background: var(--glass);
+            color: #fff;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .option-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(255,0,85,0.4);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 4000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-text {
+            font-size: 1.5em;
+            margin-top: 20px;
+            color: var(--secondary);
+        }
+
+        .loading-detail {
+            color: #888;
+            margin-top: 10px;
+        }
+
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        .video-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 50px rgba(255,0,85,0.3);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            position: relative;
+        }
+
+        .video-tags {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .video-tag {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: bold;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+        }
+
+        .tag-official {
+            background: linear-gradient(45deg, #ffd700, #ffaa00);
+            color: #000;
+            border: 1px solid #ffd700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .tag-remix {
+            background: linear-gradient(45deg, #ff00ff, #aa00ff);
+            color: #fff;
+            border: 1px solid #ff00ff;
+            box-shadow: 0 0 10px rgba(255,0,255,0.5);
+        }
+
+        .tag-cover {
+            background: linear-gradient(45deg, #00ff88, #00cc66);
+            color: #000;
+            border: 1px solid #00ff88;
+            box-shadow: 0 0 10px rgba(0,255,136,0.5);
+        }
+
+        .tag-tiktok {
+            background: linear-gradient(45deg, #ff0055, #00d4ff);
+            color: #fff;
+            border: 1px solid #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            animation: tiktokPulse 1s infinite;
+        }
+
+        @keyframes tiktokPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .video-info {
+            padding: 20px;
+        }
+
+        .video-title {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .video-channel {
+            color: #888;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .video-channel i {
+            color: var(--secondary);
+        }
+
+        /* Player Section */
+        .player-section {
+            display: none;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .player-section.active {
+            display: block;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .rgb-border {
+            position: relative;
+            padding: 5px;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3, #ff0000);
+            background-size: 400% 400%;
+            animation: rgbMove 8s ease infinite;
+        }
+
+        @keyframes rgbMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .player-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #000;
+        }
+
+        .player-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+        }
+
+        /* Age Warning Banner */
+        .age-warning-banner {
+            display: none;
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: warningPulse 2s infinite;
+            border: 2px solid #ff4444;
+        }
+
+        .age-warning-banner.active {
+            display: block;
+        }
+
+        @keyframes warningPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,0,0,0.5); }
+            50% { box-shadow: 0 0 40px rgba(255,0,0,0.8); }
+        }
+
+        .age-warning-banner i {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        /* Profile */
+        .profile-section {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .profile-section.active {
+            display: block;
+        }
+
+        .profile-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 40px;
+            border: 2px solid var(--border);
+            text-align: center;
+        }
+
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary);
+            box-shadow: 0 0 30px rgba(255,0,85,0.4);
+        }
+
+        .age-badge {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: linear-gradient(45deg, var(--secondary), #00aaff);
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            border: 3px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .profile-name {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .profile-email {
+            color: #888;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .stat-label {
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Settings */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .settings-modal.active {
+            display: flex;
+        }
+
+        .settings-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 40px;
+            border-radius: 25px;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid var(--border);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.8em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
+
+        .danger-zone {
+            border: 3px solid #ff0000;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            background: rgba(255,0,0,0.05);
+        }
+
+        .danger-title {
+            color: #ff0000;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .delete-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+            color: #fff;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(255,0,0,0.5);
+        }
+
+        /* Device Info */
+        .device-info {
+            position: fixed;
+            bottom: 100px;
+            left: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            font-size: 0.95em;
+        }
+
+        .device-info div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0;
+        }
+
+        .device-info i {
+            color: var(--secondary);
+            font-size: 1.2em;
+        }
+
+        /* Location Info */
+        .location-info {
+            position: fixed;
+            bottom: 220px;
+            left: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            font-size: 0.95em;
+            max-width: 250px;
+        }
+
+        .location-info div {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0;
+        }
+
+        .location-info i {
+            color: #00ff88;
+            font-size: 1.2em;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 2px solid var(--border);
+            margin-top: 60px;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .footer-flag {
+            font-size: 2em;
+            animation: wave 2s infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        .footer-text {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .report-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: transparent;
+            border: 2px solid #ff4444;
+            color: #ff4444;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+
+        .report-btn:hover {
+            background: #ff4444;
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        /* Settings Button */
+        .settings-btn {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), #ff3377);
+            border: none;
+            color: #fff;
+            font-size: 1.4em;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+            box-shadow: 0 5px 20px rgba(255,0,85,0.4);
+        }
+
+        .settings-btn:hover {
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 10px 30px rgba(255,0,85,0.6);
+        }
+
+        /* User Display */
+        .user-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 12px 25px;
+            border-radius: 35px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .user-display.active {
+            display: flex;
+        }
+
+        .user-display:hover {
+            transform: scale(1.05);
+            border-color: var(--primary);
+            box-shadow: 0 0 25px rgba(255,0,85,0.3);
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary);
+        }
+
+        /* Delete Confirmation */
+        .delete-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 3500;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .delete-modal.active {
+            display: flex;
+        }
+
+        .delete-content {
+            background: linear-gradient(135deg, #2a0a0a 0%, #1a0a0a 100%);
+            padding: 40px;
+            border-radius: 25px;
+            max-width: 450px;
+            width: 90%;
+            border: 3px solid #ff0000;
+            text-align: center;
+        }
+
+        .delete-step {
+            color: #ff4444;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .analog-clock {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .toast-container {
+                left: 20px;
+                right: 20px;
+                max-width: none;
+            }
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .section-title {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Ban Modal -->
+    <div class="ban-modal" id="banModal">
+        <div class="ban-content">
+            <div class="ban-icon"><i class="fas fa-ban"></i></div>
+            <h2 class="ban-title">TÀI KHOẢN BỊ KHÓA</h2>
+            <p id="banReason">Phát hiện gian lận!</p>
+            <div class="ban-timer" id="banTimer">00:00:00</div>
+            <p style="color: #888; margin-top: 20px;">Vui lòng chờ hết thời gian để tiếp tục sử dụng</p>
+        </div>
+    </div>
+
+    <!-- Crop Modal -->
+    <div class="crop-modal" id="cropModal">
+        <div class="crop-content">
+            <h2><i class="fas fa-crop"></i> Cắt ảnh đại diện</h2>
+            <p style="color: #888; margin: 10px 0;">Kéo để chọn vùng cắt (tối đa 15MB)</p>
+            
+            <div class="crop-area" id="cropArea">
+                <img id="cropImage" src="" alt="Crop">
+            </div>
+            
+            <div class="crop-controls">
+                <button class="btn btn-secondary" onclick="closeCropModal()">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+                <button class="btn" onclick="applyCrop()">
+                    <i class="fas fa-check"></i> Áp dụng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permission Modal -->
+    <div class="permission-modal" id="permissionModal">
+        <div class="permission-content">
+            <div class="permission-icon"><i class="fas fa-shield-alt"></i></div>
+            <h2 style="margin-bottom: 20px;">Yêu cầu quyền truy cập</h2>
+            <p style="color: #888; margin-bottom: 25px;">Ứng dụng cần các quyền sau:</p>
+            
+            <div class="permission-item" id="permLocation">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    <div style="font-weight: bold;">Vị trí</div>
+                    <div style="font-size: 0.9em; color: #888;">Hiển thị thông tin địa phương</div>
+                </div>
+            </div>
+            
+            <div class="permission-item" id="permNotification">
+                <i class="fas fa-bell"></i>
+                <div>
+                    <div style="font-weight: bold;">Thông báo</div>
+                    <div style="font-size: 0.9em; color: #888;">Nhận cập nhật</div>
+                </div>
+            </div>
+            
+            <button class="btn" onclick="requestPermissions()" style="margin-top: 25px;">
+                <i class="fas fa-check"></i> Cho phép
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner active" style="width: 60px; height: 60px; border-width: 5px; display: block;"></div>
+        <div class="loading-text" id="loadingText">Đang xử lý...</div>
+        <div class="loading-detail" id="loadingDetail">Vui lòng đợi</div>
+    </div>
+
+    <!-- Network Status - CHỈ PING -->
+    <div class="network-status">
+        <div class="spinner" id="networkSpinner"></div>
+        <span id="pingDisplay"><i class="fas fa-circle-notch fa-spin"></i> Đang kiểm tra...</span>
+    </div>
+
+    <!-- User Display -->
+    <div class="user-display" id="userDisplay" onclick="showProfile()">
+        <img src="https://via.placeholder.com/45" alt="Avatar" class="user-avatar" id="headerAvatar">
+        <span id="headerUsername">Khách</span>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>Trang web xem gì cũng được</h1>
+        <p class="subtitle">ĐƯỢC CODE BỞI : NGUYỄN CHÍ DỰ (BẢN NÀY BẢN NÂNG CẤP)!</p>
+    </div>
+
+    <!-- Greeting -->
+    <div class="greeting" id="greeting">Xin chào!</div>
+
+    <!-- Clock -->
+    <div class="clock-container" id="clockContainer">
+        <div class="analog-clock">
+            <div class="clock-face">
+                <div class="clock-number" style="top: 10px; left: 50%; transform: translateX(-50%);">12</div>
+                <div class="clock-number" style="top: 50%; right: 10px; transform: translateY(-50%);">3</div>
+                <div class="clock-number" style="bottom: 10px; left: 50%; transform: translateX(-50%);">6</div>
+                <div class="clock-number" style="top: 50%; left: 10px; transform: translateY(-50%);">9</div>
+                <div class="hand hour-hand" id="hourHand"></div>
+                <div class="hand minute-hand" id="minuteHand"></div>
+                <div class="hand second-hand" id="secondHand"></div>
+                <div class="center-dot"></div>
+            </div>
+        </div>
+        <div class="digital-clock">
+            <div class="digital-time" id="digitalTime">00:00:00</div>
+            <div class="date-display" id="dateDisplay">--/--/----</div>
+        </div>
+    </div>
+
+    <!-- Auth Section -->
+    <div class="auth-section" id="authSection">
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchAuth('login')">Đăng nhập</button>
+            <button class="auth-tab" onclick="switchAuth('register')">Đăng ký</button>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Tên đăng nhập hoặc Email</label>
+                <input type="text" id="loginUser" required placeholder="Nhập tên đăng nhập...">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Mật khẩu</label>
+                <input type="password" id="loginPass" required placeholder="Nhập mật khẩu...">
+            </div>
+            <button type="submit" class="btn btn-large">
+                <i class="fas fa-sign-in-alt"></i> Đăng nhập
+            </button>
+        </form>
+
+        <form id="registerForm" style="display: none;">
+            <div class="form-group">
+                <label><i class="fas fa-id-card"></i> Họ và tên</label>
+                <input type="text" id="regName" required placeholder="Nhập họ tên...">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email</label>
+                <input type="email" id="regEmail" required placeholder="Nhập email...">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user-circle"></i> Tên đăng nhập</label>
+                <input type="text" id="regUser" required placeholder="Chọn tên đăng nhập..." oninput="updateUsernamePreview()">
+            </div>
+            <div class="username-display" id="usernamePreview" style="display: none;">
+                <label>Username của bạn sẽ là:</label>
+                <div class="username-value" id="previewValue">@username</div>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Mật khẩu</label>
+                <input type="password" id="regPass" required placeholder="Tạo mật khẩu...">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-birthday-cake"></i> Ngày sinh</label>
+                <input type="date" id="regBirth" required>
+            </div>
+            <button type="submit" class="btn btn-large">
+                <i class="fas fa-user-plus"></i> Tạo tài khoản
+            </button>
+        </form>
+    </div>
+
+    <!-- Main Menu -->
+    <div class="main-menu" id="mainMenu">
+        <h2 class="section-title">Chọn chức năng</h2>
+        <div class="menu-grid">
+            <div class="menu-card" onclick="showSearch('search')">
+                <i class="fas fa-search"></i>
+                <h3>Tìm kiếm</h3>
+                <p>Tìm video trên YouTube</p>
+            </div>
+            <div class="menu-card" onclick="showSearch('link')">
+                <i class="fas fa-link"></i>
+                <h3>Nhập link</h3>
+                <p>Xem video từ link trực tiếp</p>
+            </div>
+            <div class="menu-card" onclick="showProfile()">
+                <i class="fas fa-user"></i>
+                <h3>Hồ sơ</h3>
+                <p>Xem thông tin cá nhân</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="search-section" id="searchSection">
+        <div class="player-header">
+            <button class="btn btn-secondary" onclick="backToMenu()" style="width: auto;">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </button>
+            <h3 id="searchTitle">Tìm kiếm video</h3>
+            <div style="width: 100px;"></div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="Nhập từ khóa hoặc link YouTube...">
+            <button class="btn" onclick="performAction()" style="width: auto; padding: 18px 35px;">
+                <i class="fas fa-play"></i>
+            </button>
+        </div>
+
+        <div class="search-options">
+            <button class="option-btn active" id="btnSearch" onclick="setMode('search')">
+                <i class="fas fa-search"></i> Tìm kiếm
+            </button>
+            <button class="option-btn" id="btnLink" onclick="setMode('link')">
+                <i class="fas fa-link"></i> Nhập link
+            </button>
+        </div>
+
+        <div class="video-grid" id="videoGrid"></div>
+    </div>
+
+    <!-- Player Section -->
+    <div class="player-section" id="playerSection">
+        <div class="player-header">
+            <button class="btn btn-secondary" onclick="backToSearch()" style="width: auto;">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </button>
+            <h3>Đang phát</h3>
+            <button class="btn" onclick="backToMenu()" style="width: auto; background: linear-gradient(45deg, #ff4444, #cc0000);">
+                <i class="fas fa-home"></i>
+            </button>
+        </div>
+
+        <div class="age-warning-banner" id="ageWarningBanner">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>CẢNH BÁO 18+:</strong> Bạn chưa đủ 18 tuổi! Nội dung này dành cho người trưởng thành.
+        </div>
+
+        <div class="rgb-border">
+            <div class="player-container">
+                <iframe id="youtubePlayer" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="profile-section" id="profileSection">
+        <div class="profile-card">
+            <div class="avatar-container">
+                <img src="https://via.placeholder.com/150" alt="Avatar" class="avatar" id="profileAvatar">
+                <div class="age-badge" id="ageBadge">--</div>
+            </div>
+            <h2 class="profile-name" id="profileName">Tên người dùng</h2>
+            <p class="profile-email" id="profileEmail">email@example.com</p>
+            
+            <div class="profile-stats">
+                <div class="stat">
+                    <div class="stat-value" id="userAge">--</div>
+                    <div class="stat-label">Tuổi</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="userSearch">0</div>
+                    <div class="stat-label">Lượt tìm</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="joinDate">--</div>
+                    <div class="stat-label">Tham gia</div>
+                </div>
+            </div>
+
+            <button class="btn" onclick="showSettings()">
+                <i class="fas fa-cog"></i> Cài đặt
+            </button>
+            <button class="btn btn-secondary" onclick="logout()" style="margin-top: 15px;">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+            </button>
+            <button class="btn" onclick="backToMenu()" style="margin-top: 15px; background: linear-gradient(45deg, #666, #444);">
+                <i class="fas fa-home"></i> Về menu chính
+            </button>
+        </div>
+    </div>
+
+    <!-- Location Info -->
+    <div class="location-info" id="locationInfo" style="display: none;">
+        <div><i class="fas fa-map-marker-alt"></i> <span id="locationText">Đang lấy vị trí...</span></div>
+        <div><i class="fas fa-city"></i> <span id="cityText">--</span></div>
+    </div>
+
+    <!-- Device Info -->
+    <div class="device-info" id="deviceInfo">
+        <div><i class="fas fa-mobile-alt"></i> <span id="deviceType">Đang phát hiện...</span></div>
+        <div><i class="fas fa-wifi"></i> <span id="networkType">Đang phát hiện...</span></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div class="footer-flag">🇻🇳</div>
+            <div class="footer-text">MADE IN VN</div>
+            <div class="footer-text">MADE BY : NGUYỄN CHÍ DỰ</div>
+            <div class="footer-text">POWERED BY GOOGLE CLOUD CONSOLE - YOUTUBE API</div>
+            <button class="report-btn" onclick="reportError()">
+                <i class="fas fa-bug"></i> Báo cáo lỗi
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <button class="settings-btn" id="settingsBtn" onclick="showSettings()">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <button class="close-btn" onclick="closeSettings()"><i class="fas fa-times"></i></button>
+            <h2 style="margin-bottom: 30px;"><i class="fas fa-cog"></i> Cài đặt</h2>
+
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label>Tên hiển thị</label>
+                    <input type="text" id="settingName">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="settingEmail">
+                </div>
+                <div class="form-group">
+                    <label>Tiểu sử</label>
+                    <input type="text" id="settingBio" placeholder="Giới thiệu về bản thân...">
+                </div>
+                <div class="form-group" id="avatarUploadGroup">
+                    <label>Avatar</label>
+                    <input type="file" id="settingAvatar" accept="image/*" style="display: none;">
+                    <button type="button" class="btn btn-secondary" onclick="handleAvatarSelect()" id="uploadBtn" style="width: 100%;">
+                        <i class="fas fa-upload"></i> Tải lên avatar mới
+                    </button>
+                    <small style="color: #888; display: block; margin-top: 10px;" id="uploadNotice"></small>
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">
+                    <i class="fas fa-save"></i> Lưu thay đổi
+                </button>
+            </form>
+
+            <div class="danger-zone">
+                <h3 class="danger-title"><i class="fas fa-exclamation-triangle"></i> KHU VỰC NGUY HIỂM</h3>
+                <p style="color: #888; margin-bottom: 15px; font-size: 0.9em;">Xóa tất cả dữ liệu sẽ không thể khôi phục!</p>
+                <button class="delete-btn" onclick="startDeleteProcess()">
+                    <i class="fas fa-trash"></i> XÓA TẤT CẢ DỮ LIỆU
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation -->
+    <div class="delete-modal" id="deleteModal">
+        <div class="delete-content">
+            <div class="delete-step" id="deleteStepText">Bước 1/3</div>
+            <h2 style="color: #ff4444; margin-bottom: 20px;"><i class="fas fa-exclamation-triangle"></i></h2>
+            <p id="deleteMessage" style="margin-bottom: 25px; font-size: 1.1em;">Bạn có chắc chắn muốn xóa tất cả dữ liệu?</p>
+            
+            <div class="form-group" id="deleteInputGroup" style="display: none;">
+                <label style="color: #ff4444;">Nhập tên tài khoản để xác nhận</label>
+                <input type="text" id="deleteUsername" placeholder="@username" style="text-align: center; border-color: #ff4444;">
+            </div>
+            
+            <button class="delete-btn" onclick="confirmDelete()" id="deleteActionBtn">
+                Tiếp tục (1/3)
+            </button>
+            <button class="btn btn-secondary" onclick="closeDeleteModal()" style="margin-top: 15px; width: 100%;">
+                Hủy bỏ
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_KEY = 'AIzaSyCzq7ey8b9r22Cr61ZgbCLZPsm3dxSf5xc';
+        const API_BASE = 'https://www.googleapis.com/youtube/v3';
+
+        // State
+        let currentUser = null;
+        let currentMode = 'search';
+        let deleteStep = 0;
+        let userLocation = null;
+        let isAdultContent = false;
+        let cropData = null;
+        let selectedFile = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initClock();
+            detectDevice();
+            checkPermissions();
+            loadUserData();
+            checkBanStatus();
+        });
+
+        // Toast Notification System
+        function showToast(title, message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 
+                        type === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle';
+            
+            toast.innerHTML = `
+                <div class="toast-icon"><i class="fas ${icon}"></i></div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // Progress Bar with Color Change
+        function updateProgress(percent) {
+            const container = document.getElementById('progressContainer');
+            const bar = document.getElementById('progressBar');
+            
+            container.classList.add('active');
+            bar.style.width = percent + '%';
+            
+            // Color change: <50% green, 50-64% yellow, 65-74% orange, >=75% red
+            if (percent < 50) {
+                bar.style.backgroundColor = '#00ff88';
+                bar.style.boxShadow = '0 0 15px #00ff88';
+            } else if (percent < 65) {
+                bar.style.backgroundColor = '#ffff00';
+                bar.style.boxShadow = '0 0 15px #ffff00';
+            } else if (percent < 75) {
+                bar.style.backgroundColor = '#ff8800';
+                bar.style.boxShadow = '0 0 15px #ff8800';
+            } else {
+                bar.style.backgroundColor = '#ff0000';
+                bar.style.boxShadow = '0 0 15px #ff0000';
+            }
+            
+            if (percent >= 100) {
+                setTimeout(() => {
+                    container.classList.remove('active');
+                    bar.style.width = '0%';
+                }, 500);
+            }
+        }
+
+        // Anti-Cheat System
+        function logCheatingAttempt(type) {
+            let cheatLog = JSON.parse(localStorage.getItem('cheatLog') || '[]');
+            cheatLog.push({
+                type: type,
+                timestamp: new Date().toISOString(),
+                user: currentUser ? currentUser.username : 'unknown'
+            });
+            localStorage.setItem('cheatLog', JSON.stringify(cheatLog));
+            
+            const recentViolations = cheatLog.filter(c => {
+                const days = (new Date() - new Date(c.timestamp)) / (1000 * 60 * 60 * 24);
+                return days <= 30 && c.user === (currentUser ? currentUser.username : 'unknown');
+            }).length;
+            
+            if (recentViolations === 1) {
+                const banEnd = new Date();
+                banEnd.setDate(banEnd.getDate() + 3);
+                localStorage.setItem('banEnd', banEnd.toISOString());
+                localStorage.setItem('banReason', 'Phát hiện gian lận (Lần 1)');
+                showBanModal();
+            } else if (recentViolations >= 2) {
+                deleteAccountAndBan();
+            }
+        }
+
+        function checkBanStatus() {
+            const banEnd = localStorage.getItem('banEnd');
+            if (banEnd && new Date() < new Date(banEnd)) {
+                showBanModal();
+                return true;
+            }
+            return false;
+        }
+
+        function showBanModal() {
+            const banEnd = new Date(localStorage.getItem('banEnd'));
+            const reason = localStorage.getItem('banReason') || 'Vi phạm quy định';
+            
+            document.getElementById('banReason').textContent = reason;
+            document.getElementById('banModal').classList.add('active');
+            
+            setInterval(() => {
+                const now = new Date();
+                const diff = banEnd - now;
+                
+                if (diff <= 0) {
+                    location.reload();
+                    return;
+                }
+                
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('banTimer').textContent = 
+                    `${String(days).padStart(2,'0')}:${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        function deleteAccountAndBan() {
+            if (currentUser) {
+                let users = JSON.parse(localStorage.getItem('app_users') || '[]');
+                users = users.filter(u => u.id !== currentUser.id);
+                localStorage.setItem('app_users', JSON.stringify(users));
+            }
+            
+            localStorage.removeItem('app_currentUser');
+            localStorage.removeItem('app_autoLogin');
+            
+            const newAccountBan = new Date();
+            newAccountBan.setDate(newAccountBan.getDate() + 30);
+            localStorage.setItem('newAccountBan', newAccountBan.toISOString());
+            
+            alert('Tài khoản đã bị xóa vĩnh viễn do gian lận! Bạn không thể tạo tài khoản mới trong 30 ngày.');
+            location.reload();
+        }
+
+        // Permission System
+        function checkPermissions() {
+            const perms = localStorage.getItem('permissions');
+            if (!perms) {
+                document.getElementById('permissionModal').classList.add('active');
+            } else {
+                initApp();
+            }
+        }
+
+        function requestPermissions() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = position.coords;
+                        document.getElementById('permLocation').classList.add('granted');
+                        document.getElementById('locationInfo').style.display = 'block';
+                        document.getElementById('locationText').textContent = 
+                            `${position.coords.latitude.toFixed(2)}, ${position.coords.longitude.toFixed(2)}`;
+                        
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                document.getElementById('cityText').textContent = 
+                                    data.address.city || data.address.town || 'Không xác định';
+                            });
+                    },
+                    (error) => {
+                        document.getElementById('permLocation').classList.add('denied');
+                    }
+                );
+            }
+
+            if ("Notification" in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        document.getElementById('permNotification').classList.add('granted');
+                    } else {
+                        document.getElementById('permNotification').classList.add('denied');
+                    }
+                });
+            }
+
+            localStorage.setItem('permissions', JSON.stringify({
+                timestamp: new Date().toISOString()
+            }));
+
+            setTimeout(() => {
+                document.getElementById('permissionModal').classList.remove('active');
+                initApp();
+            }, 1000);
+        }
+
+        function initApp() {
+            initNetworkCheck();
+            updateGreeting();
+        }
+
+        // Clock System
+        function initClock() {
+            function updateClock() {
+                const now = new Date();
+                const vietnamTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+                
+                const hours = String(vietnamTime.getHours()).padStart(2, '0');
+                const minutes = String(vietnamTime.getMinutes()).padStart(2, '0');
+                const seconds = String(vietnamTime.getSeconds()).padStart(2, '0');
+                document.getElementById('digitalTime').textContent = `${hours}:${minutes}:${seconds}`;
+                
+                const day = String(vietnamTime.getDate()).padStart(2, '0');
+                const month = String(vietnamTime.getMonth() + 1).padStart(2, '0');
+                const year = vietnamTime.getFullYear();
+                document.getElementById('dateDisplay').textContent = `${day}/${month}/${year}`;
+                
+                const h = vietnamTime.getHours() % 12;
+                const m = vietnamTime.getMinutes();
+                const s = vietnamTime.getSeconds();
+                
+                document.getElementById('hourHand').style.transform = `rotate(${(h * 30) + (m * 0.5)}deg)`;
+                document.getElementById('minuteHand').style.transform = `rotate(${m * 6}deg)`;
+                document.getElementById('secondHand').style.transform = `rotate(${s * 6}deg)`;
+            }
+            
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // Simplified Network Check - Only Ping
+        function initNetworkCheck() {
+            function checkPing() {
+                const start = performance.now();
+                fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' })
+                    .then(() => {
+                        const ping = Math.round(performance.now() - start);
+                        const color = ping < 100 ? '#00ff88' : ping < 300 ? '#ffaa00' : '#ff4444';
+                        document.getElementById('pingDisplay').innerHTML = 
+                            `<i class="fas fa-circle" style="color: ${color}"></i> Ping: ${ping} ms`;
+                    })
+                    .catch(() => {
+                        document.getElementById('pingDisplay').innerHTML = 
+                            '<i class="fas fa-times" style="color: #ff4444;"></i> Mất kết nối';
+                    });
+            }
+            
+            checkPing();
+            setInterval(checkPing, 5000);
+        }
+
+        // Device Detection - Simplified
+        function detectDevice() {
+            const ua = navigator.userAgent;
+            let device = 'Máy tính';
+            
+            if (/Android/i.test(ua)) device = 'Android';
+            else if (/iPhone/i.test(ua)) device = 'iPhone';
+            else if (/iPad/i.test(ua)) device = 'iPad';
+            
+            document.getElementById('deviceType').textContent = device;
+            document.getElementById('networkType').textContent = navigator.onLine ? 'Online' : 'Offline';
+        }
+
+        // Greeting
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            let greeting = 'Xin chào!';
+            
+            if (hour < 12) greeting = 'Chào buổi sáng! ☀️';
+            else if (hour < 18) greeting = 'Chào buổi chiều! 🌤️';
+            else greeting = 'Chào buổi tối! 🌙';
+            
+            if (currentUser) {
+                greeting = `${greeting.replace('!', '')}, ${currentUser.name}!`;
+            }
+            
+            document.getElementById('greeting').textContent = greeting;
+        }
+
+        // Auth System
+        function switchAuth(mode) {
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'login') {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            } else {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+            }
+        }
+
+        // Update username preview
+        function updateUsernamePreview() {
+            const input = document.getElementById('regUser').value.trim();
+            const preview = document.getElementById('usernamePreview');
+            const value = document.getElementById('previewValue');
+            
+            if (input) {
+                preview.style.display = 'block';
+                value.textContent = '@' + input;
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Register
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newAccountBan = localStorage.getItem('newAccountBan');
+            if (newAccountBan && new Date() < new Date(newAccountBan)) {
+                const daysLeft = Math.ceil((new Date(newAccountBan) - new Date()) / (1000 * 60 * 60 * 24));
+                showToast('Không thể tạo tài khoản', `Bạn bị cấm tạo TK mới trong ${daysLeft} ngày nữa`, 'error');
+                return;
+            }
+            
+            const age = calculateAge(document.getElementById('regBirth').value);
+            
+            const user = {
+                id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                username: '@' + document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value,
+                birthday: document.getElementById('regBirth').value,
+                age: age,
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(document.getElementById('regName').value)}&background=random&color=fff&size=150`,
+                bio: '',
+                joinDate: new Date().toISOString(),
+                searchCount: 0,
+                lastSearchDate: new Date().toDateString(),
+                isAdult: age >= 18
+            };
+            
+            let users = [];
+            try {
+                const stored = localStorage.getItem('app_users');
+                if (stored) users = JSON.parse(stored);
+            } catch (e) {}
+            
+            if (users.find(u => u.username === user.username)) {
+                showToast('Lỗi đăng ký', 'Tên đăng nhập đã tồn tại!', 'error');
+                return;
+            }
+            
+            if (users.find(u => u.email === user.email)) {
+                showToast('Lỗi đăng ký', 'Email đã được sử dụng!', 'error');
+                return;
+            }
+            
+            users.push(user);
+            localStorage.setItem('app_users', JSON.stringify(users));
+            
+            showToast('Thành công', 'Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+            switchAuth('login');
+            document.getElementById('loginUser').value = user.username;
+        });
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUser').value;
+            const password = document.getElementById('loginPass').value;
+            
+            let users = [];
+            try {
+                const stored = localStorage.getItem('app_users');
+                if (stored) users = JSON.parse(stored);
+            } catch (e) {}
+            
+            const user = users.find(u => (u.username === username || u.email === username) && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('app_currentUser', JSON.stringify(user));
+                localStorage.setItem('app_autoLogin', 'true');
+                
+                showToast('Thành công', 'Đăng nhập thành công!', 'success');
+                enterMainMenu();
+            } else {
+                showToast('Thất bại', 'Sai tên đăng nhập hoặc mật khẩu!', 'error');
+            }
+        });
+
+        // Load user data
+        function loadUserData() {
+            try {
+                const autoLogin = localStorage.getItem('app_autoLogin');
+                if (autoLogin === 'true') {
+                    const stored = localStorage.getItem('app_currentUser');
+                    if (stored) {
+                        currentUser = JSON.parse(stored);
+                        enterMainMenu();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // Enter Main Menu
+        function enterMainMenu() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('clockContainer').style.display = 'none';
+            document.getElementById('mainMenu').classList.add('active');
+            document.getElementById('userDisplay').classList.add('active');
+            
+            document.getElementById('headerUsername').textContent = currentUser.name;
+            document.getElementById('headerAvatar').src = currentUser.avatar;
+            
+            updateGreeting();
+        }
+
+        // Show Search
+        function showSearch(mode) {
+            currentMode = mode;
+            document.getElementById('mainMenu').classList.remove('active');
+            document.getElementById('searchSection').classList.add('active');
+            
+            setMode(mode);
+            
+            if (mode === 'link') {
+                document.getElementById('searchTitle').textContent = 'Nhập link YouTube';
+                document.getElementById('searchInput').placeholder = 'Dán link YouTube vào đây...';
+            } else {
+                document.getElementById('searchTitle').textContent = 'Tìm kiếm video';
+                document.getElementById('searchInput').placeholder = 'Nhập từ khóa tìm kiếm...';
+            }
+            
+            document.getElementById('searchInput').focus();
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('active'));
+            
+            if (mode === 'search') {
+                document.getElementById('btnSearch').classList.add('active');
+                document.getElementById('searchInput').placeholder = 'Nhập từ khóa tìm kiếm...';
+            } else {
+                document.getElementById('btnLink').classList.add('active');
+                document.getElementById('searchInput').placeholder = 'Dán link YouTube vào đây...';
+            }
+        }
+
+        // Perform Action
+        function performAction() {
+            const query = document.getElementById('searchInput').value.trim();
+            
+            if (!query) {
+                showToast('Lỗi', 'Vui lòng nhập nội dung!', 'error');
+                return;
+            }
+            
+            if (currentMode === 'link') {
+                checkAndPlayLink(query);
+            } else {
+                performSearch(query);
+            }
+        }
+
+        // Check Link with Progress
+        function checkAndPlayLink(url) {
+            const overlay = document.getElementById('loadingOverlay');
+            const text = document.getElementById('loadingText');
+            const detail = document.getElementById('loadingDetail');
+            
+            overlay.classList.add('active');
+            
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                updateProgress(progress);
+            }, 200);
+            
+            text.textContent = 'Đang kiểm tra link...';
+            
+            setTimeout(() => {
+                detail.textContent = 'Phân tích URL...';
+            }, 1000);
+            
+            setTimeout(() => {
+                detail.textContent = 'Xác thực nguồn...';
+            }, 2500);
+            
+            setTimeout(() => {
+                clearInterval(progressInterval);
+                updateProgress(100);
+                overlay.classList.remove('active');
+                
+                const videoId = extractVideoId(url);
+                if (videoId && videoId.length === 11) {
+                    const age = calculateAge(currentUser.birthday);
+                    isAdultContent = checkIfAdultContent(url);
+                    
+                    if (isAdultContent && age < 18) {
+                        showAgeWarning();
+                    }
+                    
+                    playVideo(videoId);
+                    showToast('Thành công', 'Đã tải video!', 'success');
+                } else {
+                    showToast('Thất bại', 'Link không hợp lệ!', 'error');
+                }
+            }, 5000);
+        }
+
+        // Check if adult content
+        function checkIfAdultContent(text) {
+            const adultKeywords = ['xxx', 'sex', 'adult', '18+', 'mature', 'nsfw'];
+            const lowerText = text.toLowerCase();
+            return adultKeywords.some(keyword => lowerText.includes(keyword));
+        }
+
+        // Show Age Warning
+        function showAgeWarning() {
+            document.getElementById('ageWarningBanner').classList.add('active');
+        }
+
+        // Perform Search
+        function performSearch(query) {
+            updateProgress(10);
+            
+            isAdultContent = checkIfAdultContent(query);
+            const age = calculateAge(currentUser.birthday);
+            
+            if (isAdultContent && age < 18) {
+                showToast('Cảnh báo', 'Nội dung 18+ - Bạn chưa đủ tuổi!', 'warning');
+            }
+            
+            updateProgress(30);
+            
+            fetch(`${API_BASE}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=12&key=${API_KEY}`)
+                .then(res => {
+                    updateProgress(60);
+                    if (!res.ok) throw new Error('Lỗi kết nối');
+                    return res.json();
+                })
+                .then(data => {
+                    updateProgress(80);
+                    displayVideos(data.items);
+                    updateProgress(100);
+                    
+                    if (data.items && data.items.length > 0) {
+                        showToast('Thành công', `Tìm thấy ${data.items.length} video!`, 'success');
+                    } else {
+                        showToast('Thông báo', 'Không tìm thấy video nào', 'warning');
+                    }
+                })
+                .catch(err => {
+                    updateProgress(100);
+                    showToast('Thất bại', 'Lỗi tìm kiếm: ' + err.message, 'error');
+                });
+        }
+
+        // Extract Video ID
+        function extractVideoId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
+                /^([a-zA-Z0-9_-]{11})$/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1] && match[1].length === 11) {
+                    return match[1];
+                }
+            }
+            
+            return url.length === 11 ? url : null;
+        }
+
+        // Get Video Tags
+        function getVideoTags(title, channel) {
+            const tags = [];
+            const lowerTitle = title.toLowerCase();
+            const lowerChannel = channel.toLowerCase();
+            
+            if (lowerTitle.includes('official music video') || 
+                lowerTitle.includes('official mv') || 
+                lowerTitle.includes('official video') ||
+                lowerChannel.includes('vevo') ||
+                lowerChannel.includes('official')) {
+                tags.push({ type: 'official', text: 'OFFICIAL MV' });
+            }
+            
+            if (lowerTitle.includes('remix') || lowerTitle.includes('mix')) {
+                tags.push({ type: 'remix', text: 'REMIX' });
+            }
+            
+            if (lowerTitle.includes('cover') || lowerTitle.includes('phiên bản')) {
+                tags.push({ type: 'cover', text: 'COVER' });
+            }
+            
+            if (lowerTitle.includes('tiktok') || 
+                lowerTitle.includes('trending') || 
+                lowerTitle.includes('viral') ||
+                lowerTitle.includes('hot trend')) {
+                tags.push({ type: 'tiktok', text: 'HOT TIKTOK' });
+            }
+            
+            return tags;
+        }
+
+        // Display Videos
+        function displayVideos(videos) {
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '';
+            
+            videos.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                
+                const tags = getVideoTags(video.snippet.title, video.snippet.channelTitle);
+                const tagsHtml = tags.map(tag => 
+                    `<span class="video-tag tag-${tag.type}">${tag.text}</span>`
+                ).join('');
+                
+                card.innerHTML = `
+                    <div style="position: relative;">
+                        <img src="${video.snippet.thumbnails.medium.url}" alt="${video.snippet.title}" class="video-thumbnail">
+                        <div class="video-tags">${tagsHtml}</div>
+                    </div>
+                    <div class="video-info">
+                        <h3 class="video-title">${video.snippet.title}</h3>
+                        <p class="video-channel">
+                            <i class="fas fa-check-circle"></i> ${video.snippet.channelTitle}
+                        </p>
+                    </div>
+                `;
+                
+                card.onclick = () => {
+                    const age = calculateAge(currentUser.birthday);
+                    
+                    if (checkIfAdultContent(video.snippet.title) && age < 18) {
+                        showAgeWarning();
+                    }
+                    
+                    playVideo(video.id.videoId);
+                };
+                
+                grid.appendChild(card);
+            });
+        }
+
+        // Play Video
+        function playVideo(videoId) {
+            document.getElementById('searchSection').classList.remove('active');
+            document.getElementById('playerSection').classList.add('active');
+            
+            const player = document.getElementById('youtubePlayer');
+            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+        }
+
+        // Navigation
+        function backToMenu() {
+            document.getElementById('searchSection').classList.remove('active');
+            document.getElementById('playerSection').classList.remove('active');
+            document.getElementById('profileSection').classList.remove('active');
+            document.getElementById('mainMenu').classList.add('active');
+            
+            document.getElementById('youtubePlayer').src = '';
+            document.getElementById('ageWarningBanner').classList.remove('active');
+        }
+
+        function backToSearch() {
+            document.getElementById('playerSection').classList.remove('active');
+            document.getElementById('searchSection').classList.add('active');
+            document.getElementById('youtubePlayer').src = '';
+            document.getElementById('ageWarningBanner').classList.remove('active');
+        }
+
+        // Profile
+        function showProfile() {
+            document.getElementById('mainMenu').classList.remove('active');
+            document.getElementById('searchSection').classList.remove('active');
+            document.getElementById('playerSection').classList.remove('active');
+            document.getElementById('profileSection').classList.add('active');
+            
+            document.getElementById('profileName').textContent = currentUser.name;
+            document.getElementById('profileEmail').textContent = currentUser.email;
+            document.getElementById('profileAvatar').src = currentUser.avatar;
+            
+            const age = calculateAge(currentUser.birthday);
+            document.getElementById('userAge').textContent = age;
+            document.getElementById('ageBadge').textContent = age;
+            
+            document.getElementById('userSearch').textContent = currentUser.searchCount || 0;
+            
+            const joinDate = new Date(currentUser.joinDate);
+            document.getElementById('joinDate').textContent = `${joinDate.getDate()}/${joinDate.getMonth() + 1}`;
+        }
+
+        // Settings
+        function showSettings() {
+            document.getElementById('settingName').value = currentUser.name;
+            document.getElementById('settingEmail').value = currentUser.email;
+            document.getElementById('settingBio').value = currentUser.bio || '';
+            
+            const age = calculateAge(currentUser.birthday);
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadNotice = document.getElementById('uploadNotice');
+            
+            if (age < 15) {
+                uploadBtn.disabled = true;
+                uploadBtn.style.opacity = '0.5';
+                uploadNotice.style.color = '#ff4444';
+                uploadNotice.textContent = `Bạn cần đủ 15 tuổi để tải lên avatar (bạn mới ${age} tuổi). Hệ thống sẽ tự động dùng ảnh mặc định.`;
+            } else {
+                uploadBtn.disabled = false;
+                uploadBtn.style.opacity = '1';
+                uploadNotice.style.color = '#888';
+                uploadNotice.textContent = `Cho phép tải lên (bạn đã đủ ${age} tuổi)`;
+            }
+            
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // Handle Avatar Select
+        function handleAvatarSelect() {
+            const age = calculateAge(currentUser.birthday);
+            
+            if (age < 15) {
+                showToast('Không được phép', 'Bạn cần đủ 15 tuổi để tải lên avatar!', 'error');
+                return;
+            }
+            
+            document.getElementById('settingAvatar').click();
+        }
+
+        document.getElementById('settingAvatar').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Check size (15MB = 15 * 1024 * 1024)
+            if (file.size > 15 * 1024 * 1024) {
+                showToast('Lỗi', 'Ảnh quá lớn! Tối đa 15MB.', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Show crop modal
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('cropImage').src = e.target.result;
+                document.getElementById('cropModal').classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function closeCropModal() {
+            document.getElementById('cropModal').classList.remove('active');
+            selectedFile = null;
+        }
+
+        function applyCrop() {
+            // Simple crop simulation - in real app would use canvas
+            const img = document.getElementById('cropImage');
+            
+            // Create canvas for cropping
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set to square
+            const size = Math.min(img.naturalWidth, img.naturalHeight);
+            canvas.width = 300;
+            canvas.height = 300;
+            
+            ctx.drawImage(img, 
+                (img.naturalWidth - size) / 2, 
+                (img.naturalHeight - size) / 2, 
+                size, size,
+                0, 0, 300, 300
+            );
+            
+            const croppedImage = canvas.toDataURL('image/jpeg', 0.9);
+            
+            currentUser.avatar = croppedImage;
+            document.getElementById('headerAvatar').src = croppedImage;
+            document.getElementById('profileAvatar').src = croppedImage;
+            
+            updateUserData();
+            closeCropModal();
+            showToast('Thành công', 'Đã cập nhật avatar!', 'success');
+        }
+
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            currentUser.name = document.getElementById('settingName').value;
+            currentUser.email = document.getElementById('settingEmail').value;
+            currentUser.bio = document.getElementById('settingBio').value;
+            
+            updateUserData();
+            closeSettings();
+            showToast('Thành công', 'Đã lưu thay đổi!', 'success');
+            
+            document.getElementById('headerUsername').textContent = currentUser.name;
+            document.getElementById('profileName').textContent = currentUser.name;
+        });
+
+        // Delete Process - FIXED
+        function startDeleteProcess() {
+            deleteStep = 1;
+            document.getElementById('deleteStepText').textContent = 'Bước 1/3';
+            document.getElementById('deleteMessage').textContent = 'Bạn có chắc chắn muốn xóa tất cả dữ liệu?';
+            document.getElementById('deleteInputGroup').style.display = 'none';
+            document.getElementById('deleteActionBtn').textContent = 'Tiếp tục (1/3)';
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function confirmDelete() {
+            if (deleteStep === 1) {
+                deleteStep = 2;
+                document.getElementById('deleteStepText').textContent = 'Bước 2/3';
+                document.getElementById('deleteMessage').textContent = 'Hành động này KHÔNG THỂ hoàn tác! Dữ liệu sẽ mất vĩnh viễn!';
+                document.getElementById('deleteActionBtn').textContent = 'Vẫn tiếp tục (2/3)';
+            } else if (deleteStep === 2) {
+                deleteStep = 3;
+                document.getElementById('deleteStepText').textContent = 'Bước 3/3';
+                document.getElementById('deleteMessage').textContent = 'Nhập tên tài khoản của bạn để xác nhận xóa:';
+                document.getElementById('deleteInputGroup').style.display = 'block';
+                document.getElementById('deleteActionBtn').textContent = 'XÁC NHẬN XÓA (3/3)';
+                document.getElementById('deleteUsername').focus();
+            } else if (deleteStep === 3) {
+                const inputName = document.getElementById('deleteUsername').value.trim();
+                
+                if (inputName === currentUser.username) {
+                    // Delete user
+                    let users = [];
+                    try {
+                        const stored = localStorage.getItem('app_users');
+                        if (stored) users = JSON.parse(stored);
+                    } catch (e) {}
+                    
+                    users = users.filter(u => u.id !== currentUser.id);
+                    localStorage.setItem('app_users', JSON.stringify(users));
+                    
+                    // Clear all
+                    localStorage.removeItem('app_currentUser');
+                    localStorage.removeItem('app_autoLogin');
+                    
+                    closeDeleteModal();
+                    showToast('Thành công', 'Đã xóa tất cả dữ liệu!', 'success');
+                    
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast('Lỗi', 'Sai tên tài khoản! Vui lòng nhập đúng: ' + currentUser.username, 'error');
+                    document.getElementById('deleteUsername').value = '';
+                    document.getElementById('deleteUsername').focus();
+                }
+            }
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        // Logout
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('app_currentUser');
+            localStorage.removeItem('app_autoLogin');
+            location.reload();
+        }
+
+        // Helper Functions
+        function calculateAge(birthday) {
+            if (!birthday) return 0;
+            const birth = new Date(birthday);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            return age;
+        }
+
+        function updateUserData() {
+            localStorage.setItem('app_currentUser', JSON.stringify(currentUser));
+            
+            let users = [];
+            try {
+                const stored = localStorage.getItem('app_users');
+                if (stored) users = JSON.parse(stored);
+            } catch (e) {}
+            
+            const index = users.findIndex(u => u.id === currentUser.id);
+            if (index !== -1) {
+                users[index] = currentUser;
+                localStorage.setItem('app_users', JSON.stringify(users));
+            }
+        }
+
+        function reportError() {
+            const error = prompt('Mô tả lỗi bạn gặp phải:');
+            if (error) {
+                showToast('Thành công', 'Đã gửi báo cáo lỗi! Cảm ơn bạn.', 'success');
+            }
+        }
+
+        // Enter key support
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performAction();
+            }
+        });
+
+        // Anti-hack
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.tagName === 'IFRAME') {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+                e.preventDefault();
+                showToast('Cảnh báo', 'Chức năng bị vô hiệu hóa!', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>
