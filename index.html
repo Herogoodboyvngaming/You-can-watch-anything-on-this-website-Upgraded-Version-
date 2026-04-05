@@ -121,6 +121,76 @@
             font-size: 0.95em;
         }
 
+        /* Password Strength Modal */
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 6000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .password-modal.active {
+            display: flex;
+        }
+
+        .password-content {
+            background: linear-gradient(135deg, #2a1a0a 0%, #1a0a0a 100%);
+            border: 3px solid #ff8800;
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .password-warning-icon {
+            font-size: 4em;
+            color: #ff8800;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .risk-list {
+            text-align: left;
+            background: rgba(255,136,0,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .risk-list h4 {
+            color: #ff8800;
+            margin-bottom: 15px;
+        }
+
+        .risk-list ul {
+            list-style: none;
+            color: #ffaa88;
+        }
+
+        .risk-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .risk-list li:before {
+            content: '⚠️';
+            position: absolute;
+            left: 0;
+        }
+
         /* Ban Modal */
         .ban-modal {
             display: none;
@@ -531,6 +601,36 @@
             font-weight: bold;
         }
 
+        /* Password Strength Indicator */
+        .password-strength {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .password-strength.weak {
+            display: block;
+            background: rgba(255,68,68,0.2);
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
+
+        .password-strength.medium {
+            display: block;
+            background: rgba(255,170,0,0.2);
+            color: #ffaa00;
+            border: 1px solid #ffaa00;
+        }
+
+        .password-strength.strong {
+            display: block;
+            background: rgba(0,255,136,0.2);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+
         /* Buttons */
         .btn {
             padding: 15px 30px;
@@ -580,6 +680,10 @@
         .btn-large {
             padding: 20px 40px;
             font-size: 1.2em;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff8800, #ff5500);
         }
 
         /* Main Menu */
@@ -1082,55 +1186,57 @@
             box-shadow: 0 10px 30px rgba(255,0,0,0.5);
         }
 
-        /* Device Info */
+        /* Device Info - Đổi vị trí */
         .device-info {
             position: fixed;
-            bottom: 100px;
-            left: 20px;
+            top: 80px;
+            right: 20px;
             background: var(--glass);
             backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 20px;
+            padding: 15px;
+            border-radius: 15px;
             border: 2px solid var(--border);
-            font-size: 0.95em;
+            font-size: 0.9em;
+            z-index: 999;
         }
 
         .device-info div {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin: 8px 0;
+            gap: 10px;
+            margin: 5px 0;
         }
 
         .device-info i {
             color: var(--secondary);
-            font-size: 1.2em;
+            font-size: 1.1em;
         }
 
-        /* Location Info */
+        /* Location Info - Đổi vị trí */
         .location-info {
             position: fixed;
-            bottom: 220px;
-            left: 20px;
+            top: 180px;
+            right: 20px;
             background: var(--glass);
             backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 20px;
+            padding: 15px;
+            border-radius: 15px;
             border: 2px solid var(--border);
-            font-size: 0.95em;
-            max-width: 250px;
+            font-size: 0.9em;
+            max-width: 200px;
+            z-index: 999;
         }
 
         .location-info div {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin: 8px 0;
+            gap: 10px;
+            margin: 5px 0;
         }
 
         .location-info i {
             color: #00ff88;
-            font-size: 1.2em;
+            font-size: 1.1em;
         }
 
         /* Footer */
@@ -1303,6 +1409,14 @@
                 right: 20px;
                 max-width: none;
             }
+            
+            .device-info, .location-info {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 10px 20px;
+                max-width: none;
+            }
         }
 
         /* Utility */
@@ -1328,6 +1442,36 @@
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Password Warning Modal -->
+    <div class="password-modal" id="passwordModal">
+        <div class="password-content">
+            <div class="password-warning-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2 style="color: #ff8800; margin-bottom: 15px;">CẢNH BÁO BẢO MẬT</h2>
+            <p style="color: #ffaa88; margin-bottom: 20px;">Mật khẩu của bạn <strong>QUÁ YẾU</strong>!</p>
+            
+            <div class="risk-list">
+                <h4><i class="fas fa-skull-crossbones"></i> Rủi ro khi mật khẩu yếu:</h4>
+                <ul>
+                    <li>Dễ bị <strong>Brute Force Attack</strong> (tấn công vét cạn)</li>
+                    <li>Hacker có thể <strong>đoán mật khẩu</strong> trong vài phút</li>
+                    <li>Tài khoản dễ bị <strong>chiếm đoạt</strong> bởi người lạ</li>
+                    <li>Mất <strong>dữ liệu cá nhân</strong> và lịch sử xem</li>
+                    <li>Bị lợi dụng để <strong>gửi spam</strong> hoặc phát tán link độc</li>
+                    <li>Có thể bị <strong>khóa tài khoản</strong> vĩnh viễn nếu bị hack</li>
+                </ul>
+            </div>
+            
+            <p style="color: #888; margin: 20px 0; font-size: 0.9em;">Mật khẩu mạnh nên có: 8+ ký tự, chữ hoa, chữ thường, số và ký tự đặc biệt</p>
+            
+            <button class="btn btn-warning" onclick="proceedWithWeakPassword()" style="margin-bottom: 10px;">
+                <i class="fas fa-check"></i> Vẫn tiếp tục (Tôi chấp nhận rủi ro)
+            </button>
+            <button class="btn btn-secondary" onclick="closePasswordModal()">
+                <i class="fas fa-shield-alt"></i> Đổi mật khẩu an toàn hơn
+            </button>
+        </div>
+    </div>
 
     <!-- Ban Modal -->
     <div class="ban-modal" id="banModal">
@@ -1477,8 +1621,9 @@
                 <div class="username-value" id="previewValue">@username</div>
             </div>
             <div class="form-group">
-                <label><i class="fas fa-lock"></i> Mật khẩu</label>
-                <input type="password" id="regPass" required placeholder="Tạo mật khẩu...">
+                <label><i class="fas fa-lock"></i> Mật khẩu <small style="color: #888;">(Tối thiểu 6 ký tự)</small></label>
+                <input type="password" id="regPass" required placeholder="Tạo mật khẩu..." oninput="checkPasswordStrength()">
+                <div class="password-strength" id="passwordStrength"></div>
             </div>
             <div class="form-group">
                 <label><i class="fas fa-birthday-cake"></i> Ngày sinh</label>
@@ -1602,16 +1747,16 @@
         </div>
     </div>
 
-    <!-- Location Info -->
-    <div class="location-info" id="locationInfo" style="display: none;">
-        <div><i class="fas fa-map-marker-alt"></i> <span id="locationText">Đang lấy vị trí...</span></div>
-        <div><i class="fas fa-city"></i> <span id="cityText">--</span></div>
-    </div>
-
-    <!-- Device Info -->
+    <!-- Device Info - Đổi sang góc trên phải -->
     <div class="device-info" id="deviceInfo">
         <div><i class="fas fa-mobile-alt"></i> <span id="deviceType">Đang phát hiện...</span></div>
         <div><i class="fas fa-wifi"></i> <span id="networkType">Đang phát hiện...</span></div>
+    </div>
+
+    <!-- Location Info - Đổi sang góc trên phải -->
+    <div class="location-info" id="locationInfo" style="display: none;">
+        <div><i class="fas fa-map-marker-alt"></i> <span id="locationText">Đang lấy vị trí...</span></div>
+        <div><i class="fas fa-city"></i> <span id="cityText">--</span></div>
     </div>
 
     <!-- Footer -->
@@ -1708,6 +1853,8 @@
         let isAdultContent = false;
         let cropData = null;
         let selectedFile = null;
+        let weakPasswordConfirmed = false;
+        let pendingUserData = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
@@ -1773,6 +1920,57 @@
                     container.classList.remove('active');
                     bar.style.width = '0%';
                 }, 500);
+            }
+        }
+
+        // Password Strength Checker
+        function checkPasswordStrength() {
+            const password = document.getElementById('regPass').value;
+            const strengthDiv = document.getElementById('passwordStrength');
+            
+            if (!password) {
+                strengthDiv.style.display = 'none';
+                return;
+            }
+            
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            strengthDiv.style.display = 'block';
+            
+            if (strength <= 2) {
+                strengthDiv.className = 'password-strength weak';
+                strengthDiv.innerHTML = '<i class="fas fa-times-circle"></i> Mật khẩu YẾU - Dễ bị hack!';
+            } else if (strength <= 4) {
+                strengthDiv.className = 'password-strength medium';
+                strengthDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Mật khẩu TRUNG BÌNH - Có thể bảo mật hơn';
+            } else {
+                strengthDiv.className = 'password-strength strong';
+                strengthDiv.innerHTML = '<i class="fas fa-check-circle"></i> Mật khẩu MẠNH - An toàn!';
+            }
+        }
+
+        // Show Password Warning Modal
+        function showPasswordWarning(userData) {
+            pendingUserData = userData;
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('regPass').focus();
+        }
+
+        function proceedWithWeakPassword() {
+            weakPasswordConfirmed = true;
+            document.getElementById('passwordModal').classList.remove('active');
+            if (pendingUserData) {
+                completeRegistration(pendingUserData);
             }
         }
 
@@ -2032,13 +2230,23 @@
             }
             
             const age = calculateAge(document.getElementById('regBirth').value);
+            const password = document.getElementById('regPass').value;
             
-            const user = {
+            // Check password strength
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            const userData = {
                 id: Date.now().toString(36) + Math.random().toString(36).substr(2),
                 name: document.getElementById('regName').value,
                 email: document.getElementById('regEmail').value,
                 username: '@' + document.getElementById('regUser').value,
-                password: document.getElementById('regPass').value,
+                password: password,
                 birthday: document.getElementById('regBirth').value,
                 age: age,
                 avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(document.getElementById('regName').value)}&background=random&color=fff&size=150`,
@@ -2049,29 +2257,43 @@
                 isAdult: age >= 18
             };
             
+            // If password is weak and not confirmed, show warning
+            if (strength <= 2 && !weakPasswordConfirmed) {
+                showPasswordWarning(userData);
+                return;
+            }
+            
+            completeRegistration(userData);
+        });
+
+        function completeRegistration(userData) {
             let users = [];
             try {
                 const stored = localStorage.getItem('app_users');
                 if (stored) users = JSON.parse(stored);
             } catch (e) {}
             
-            if (users.find(u => u.username === user.username)) {
+            if (users.find(u => u.username === userData.username)) {
                 showToast('Lỗi đăng ký', 'Tên đăng nhập đã tồn tại!', 'error');
                 return;
             }
             
-            if (users.find(u => u.email === user.email)) {
+            if (users.find(u => u.email === userData.email)) {
                 showToast('Lỗi đăng ký', 'Email đã được sử dụng!', 'error');
                 return;
             }
             
-            users.push(user);
+            users.push(userData);
             localStorage.setItem('app_users', JSON.stringify(users));
             
             showToast('Thành công', 'Đăng ký thành công! Vui lòng đăng nhập.', 'success');
             switchAuth('login');
-            document.getElementById('loginUser').value = user.username;
-        });
+            document.getElementById('loginUser').value = userData.username;
+            
+            // Reset flags
+            weakPasswordConfirmed = false;
+            pendingUserData = null;
+        }
 
         // Login
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -2175,8 +2397,11 @@
             }
         }
 
-        // Check Link with Progress
+        // Check Link with Progress - HIỆN Ở MAIN WATCH
         function checkAndPlayLink(url) {
+            // Hiện progress bar ngay
+            updateProgress(0);
+            
             const overlay = document.getElementById('loadingOverlay');
             const text = document.getElementById('loadingText');
             const detail = document.getElementById('loadingDetail');
@@ -2234,8 +2459,9 @@
             document.getElementById('ageWarningBanner').classList.add('active');
         }
 
-        // Perform Search
+        // Perform Search - HIỆN PROGRESS
         function performSearch(query) {
+            // Hiện progress bar ngay
             updateProgress(10);
             
             isAdultContent = checkIfAdultContent(query);
@@ -2245,11 +2471,9 @@
                 showToast('Cảnh báo', 'Nội dung 18+ - Bạn chưa đủ tuổi!', 'warning');
             }
             
-            updateProgress(30);
-            
             fetch(`${API_BASE}/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=12&key=${API_KEY}`)
                 .then(res => {
-                    updateProgress(60);
+                    updateProgress(50);
                     if (!res.ok) throw new Error('Lỗi kết nối');
                     return res.json();
                 })
@@ -2476,14 +2700,11 @@
         }
 
         function applyCrop() {
-            // Simple crop simulation - in real app would use canvas
             const img = document.getElementById('cropImage');
             
-            // Create canvas for cropping
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            // Set to square
             const size = Math.min(img.naturalWidth, img.naturalHeight);
             canvas.width = 300;
             canvas.height = 300;
